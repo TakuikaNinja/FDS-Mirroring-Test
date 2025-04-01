@@ -2,6 +2,8 @@
 
 This program tests the FDS' ability to switch the nametable arrangement/mirroring via $4025.D3. It also verifies that its state is readable via $4030.D3 (previously undocumented behaviour).
 
+NESdev forum post: https://forums.nesdev.org/viewtopic.php?p=300488#p300488
+
 ## Usage
 
 Simply load the program into an FDS, whether it be original hardware or on an emulator.
@@ -24,3 +26,4 @@ A simple `make` should then work.
   - It contains tiles from Generitiles by Drag, Cavewoman by Sik, and Chase by shiru.
 - Hardware testing was done using a Sharp Twin Famicom + [FDSKey](https://github.com/ClusterM/fdskey).
 - The NESdev Wiki, Forums, and Discord have been a massive help. Kudos to everyone keeping this console generation alive!
+  - Thanks to SCSR in particular, who has been analysing the RP2C33 die.
