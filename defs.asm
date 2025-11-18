@@ -59,7 +59,7 @@
 	SkipFiles = $e4da
 
 ; delays
-	Delay132 = $e149 ; 132 clock cycle delay
+	Delay131 = $e149 ; 131 clock cycle delay
 	Delayms = $e153 ; delay = 1790*Y+5 cycles
 
 ; sprite/bg rendering

@@ -13,7 +13,7 @@ FILE_COUNT = 5
 .byte $00 ; manufacturer
 .byte "FMT" ; game name
 .byte $20 ; normal disk
-.byte $00 ; game version
+.byte $01 ; game version
 .byte $00 ; side
 .byte $00 ; disk
 .byte $00 ; disk type

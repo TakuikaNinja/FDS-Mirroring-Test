@@ -20,7 +20,16 @@
 	sta StringStatus
 .endmacro
 
-; for use with the FDS BIOS VRAM struct format
+; macros for use with the FDS BIOS VRAM struct format
+
+; convert X/Y tile coordinates to PPU nametable address
+.macro vram_addr base, tileX, tileY
+	.assert base >= $2000 && base < $3000, error, "invalid base address"
+	.assert tileX >= 0 && tileX < 32, error, "invalid tileX"
+	.assert tileY >= 0 && tileY < 30, error, "invalid tileY"
+	.dbyt (base + (tileY << 5) + tileX)
+.endmacro
+
 .macro encode_length inc32, fill, len 
 	.assert len > 0 && len <= 64, error, "cannot encode length"
 	.byte (inc32 << 7) | (fill << 6) | (len & 63)

@@ -11,6 +11,7 @@
 	Mode: .res 1
 	NametableFails: .res 1
 	ReadFails: .res 1
+	IOToggleFails: .res 1
 
 ; BIOS zeropage variables
 .segment "BIOSZP": zeropage

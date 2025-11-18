@@ -1,9 +1,9 @@
 ; constants
 
 ; $4025/$4030 constants
-.enum MIRROR
-	V = $26 ; horizontal arrangement
-	H = $2e ; vertical arrangement
+.enum ARRANGE
+	H = $26 ; horizontal arrangement
+	V = $2e ; vertical arrangement
 	MASK = %00001000
 .endenum
 

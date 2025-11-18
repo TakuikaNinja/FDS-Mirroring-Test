@@ -33,6 +33,7 @@ Reset:
 DoTests:
 		jsr CheckNametables
 		jsr FDS_STATUS_Reads
+		jsr FDS_IO_Toggles
 
 		lda #%10000000									; enable NMIs & change background pattern map access
 		sta PPU_CTRL_MIRROR
@@ -96,7 +97,7 @@ NonMaskableInterrupt:
 
 :
 		dec NMIReady
-		jsr ReadOrDownPads								; read controllers + expansion port
+;		jsr ReadOrDownPads								; read controllers + expansion port
 
 NotReady:
 		jsr SetScroll									; remember to set scroll on lag frames
@@ -161,12 +162,12 @@ ProcessBGMode:
 	.addr DoNothing
 		
 TestValues:
-	.byte MIRROR::V, MIRROR::H
+	.byte ARRANGE::H, ARRANGE::V
 
 Expected:
-	.byte $00, MIRROR::MASK
+	.byte $00, ARRANGE::MASK
 
-; Check that $4025.d3 is returned in $4030.d3
+; Check that $4025.D3 is returned in $4030.D3
 ; (previously undocumented behaviour)
 FDS_STATUS_Reads:
 		ldx #$01
@@ -175,7 +176,7 @@ FDS_STATUS_Reads:
 		lda TestValues,x
 		sta FDS_CTRL
 		lda FDS_STATUS
-		and #MIRROR::MASK
+		and #ARRANGE::MASK
 		cmp Expected,x
 		beq :+
 		inc ReadFails
@@ -197,22 +198,64 @@ WriteBytes:
 		sta PPU_DATA
 		rts
 
+; Check that disabling disk registers ($4023.D0 = 0) indirectly sets $4025 = $06, 
+; thus resetting the arrangement/mirroring and clearing $4030.D3
+; Note that disabling disk registers should still allow reads from the read-only ones...
+FDS_IO_Masks:
+	.byte %10000011, %10000010
+
+FDS_IO_Toggles:
+		jsr InitNametables
+		lda #ARRANGE::V									; set $4025.D3 = 1 so the state change can be observed
+		sta FDS_CTRL
+		ldx #$01
+		
+@loop:
+		lda FDS_IO_Masks,x								; first write ($4023.D0) = 0 must alter the arrangement
+		sta FDS_IO_ENABLE
+		lda FDS_STATUS
+		and #ARRANGE::MASK								; $4030.D3 must change to and stay as 0
+		beq :+
+		inc IOToggleFails
+:
+		dex
+		bpl @loop
+		jsr Delay131									; refresh DRAM rows just in case
+		
+; Now check that the nametable arrangement/mirroring was altered by the $4023.D0 = 0 write
+		lda NametableFails								; preserve previous test result
+		pha
+		lda #$00
+		sta NametableFails
+		lda #<H_Arrangement
+		sta temp
+		lda #>H_Arrangement
+		sta temp+1
+		jsr CheckNametablePair
+		lda NametableFails								; nametable fails here...
+		clc
+		adc IOToggleFails
+		sta IOToggleFails								; ...are now added to IO toggle fails
+		pla
+		sta NametableFails								; restore previous test result
+		rts 
+
 NametableAddrsLo:
-	.lobytes NametableAddrsV, NametableAddrsH
+	.lobytes H_Arrangement, V_Arrangement
 
 NametableAddrsHi:
-	.hibytes NametableAddrsV, NametableAddrsH
+	.hibytes H_Arrangement, V_Arrangement
 
 ; left column = right column
-NametableAddrsH:
+V_Arrangement:
 	.byte $20, $24
 	.byte $28, $2c
 
-NametableAddrsV:
+H_Arrangement:
 	.byte $20, $28
 	.byte $24, $2c
 
-; Check that $4025.d3 correctly switches the PPU nametable arrangement/mirroring
+; Check that $4025.D3 correctly switches the PPU nametable arrangement/mirroring
 CheckNametables:
 		ldx #$01
 @loop:
@@ -269,8 +312,8 @@ CheckNametablePair:
 
 ; Initialise background to display the test results
 BGInit:
-		jsr DisableRendering
-		jsr WaitForNMI
+;		jsr DisableRendering
+;		jsr WaitForNMI
 		jsr InitNametables
 		jsr WaitForNMI
 		jsr VRAMStructWrite
@@ -284,11 +327,16 @@ BGInit:
 PrintResults:
 		lda NametableFails
 		jsr PrintResult
-	.addr $2107+12
+	vram_addr $2000, 20, 8
 		
 		lda ReadFails
 		jsr PrintResult
-	.addr $2147+12
+	vram_addr $2000, 20, 10
+		
+		lda IOToggleFails
+		jsr PrintResult
+	vram_addr $2000, 20, 12
+		
 		rts
 
 PrintResult:
@@ -304,8 +352,8 @@ PrintResult:
 		sta StringAddr+1
 			
 PrepareString:
-		lda temp+1
-		ldx temp
+		lda temp
+		ldx temp+1
 		ldy #4
 		jsr PrepareVRAMString
 		
@@ -344,14 +392,17 @@ Palettes:
 PaletteDataSize = .sizeof(PaletteData)
 
 TextData:
-	.dbyt $2087
+	vram_addr $2000, 7, 4
 	encode_string INC1, COPY, "FDS Mirroring Tests"
 	
-	.dbyt $2107
+	vram_addr $2000, 8, 8
 	encode_string INC1, COPY, "$4025.D3 W: "
 
-	.dbyt $2147
+	vram_addr $2000, 8, 10
 	encode_string INC1, COPY, "$4030.D3 R: "
+	
+	vram_addr $2000, 8, 12
+	encode_string INC1, COPY, "$4023.D0=0: "
 	
 	encode_terminator
 
