@@ -1,21 +1,30 @@
 GAME=mirroring-test
-FORMAT=fds
+ZIP_NAME=FDS-Mirroring-Test
 ASSEMBLER=ca65
 LINKER=ld65
 
 OBJ_FILES=$(GAME).o
 
-all: $(GAME).$(FORMAT)
+all: $(GAME).fds
 
-$(GAME).fds: $(OBJ_FILES) $(FORMAT).cfg
-	$(LINKER) -o $(GAME).$(FORMAT) -C $(FORMAT).cfg $(OBJ_FILES) -m $(GAME).map.txt -Ln $(GAME).labels.txt --dbgfile $(GAME).dbg
+$(GAME).fds: $(OBJ_FILES) fds.cfg
+	$(LINKER) -o $(GAME).fds -C fds.cfg $(OBJ_FILES) -m $(GAME).map.txt -Ln $(GAME).labels.txt --dbgfile $(GAME).dbg
 
-.PHONY: clean
+dist: zip
+zip: $(ZIP_NAME).zip
+$(ZIP_NAME).zip: zip.in
+	zip -9 -u $@ -@ < $<
+
+zip.in: $(GAME).fds README.md
+	echo $(GAME).fds > $@
+	echo README.md >> $@
+
+.PHONY: clean dist zip
 
 clean:
-	rm -f *.o *.fds *.dbg *.nl *.map.txt *.labels.txt
+	$(RM) *.o *.fds *.dbg *.nl *.map.txt *.labels.txt *.zip
 
-$(GAME).o: *.asm Jroatch-chr-sheet.chr
+$(GAME).o: $(wildcard *.asm) Jroatch-chr-sheet.chr
 
 %.o:%.asm
 	$(ASSEMBLER) $< -g -o $@

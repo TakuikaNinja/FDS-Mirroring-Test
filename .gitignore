@@ -10,3 +10,5 @@ Thumbs.db
 *.labels.txt
 *.map.txt
 *.o
+*.zip
+zip.in
