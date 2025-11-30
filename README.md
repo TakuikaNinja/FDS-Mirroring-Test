@@ -1,4 +1,4 @@
-# FDS BIOS Dumper
+# FDS Mirroring Tests
 
 This program tests the FDS' ability to switch the nametable arrangement/mirroring via $4025.D3, along with some previously undocumented behaviours pertaining to $4030.D3 and $4023.D0.
 
@@ -6,7 +6,7 @@ NESdev forum post: https://forums.nesdev.org/viewtopic.php?p=300488#p300488
 
 ## Usage
 
-Simply load the program into an FDS, whether it be original hardware or on an emulator.
+Simply load the program into an FDS, whether it be original hardware or emulators.
 
 The test results will be shown in the following manner:
 - $4025.D3 W: Pass/Fail (nametable arrangement must be switchable) 
